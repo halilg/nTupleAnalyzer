@@ -3,7 +3,7 @@ $(error *** Please set up ROOT)
 endif
 
 CPP=g++
-CPPFLAGS=-I. -Wall
+CPPFLAGS=-I. -Wall -std=c++11
 LROOT=`root-config --glibs`
 CROOT=`root-config --cflags`
 LOTHER= #-lboost_system

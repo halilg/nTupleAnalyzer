@@ -22,10 +22,10 @@
 
 
 # defaults
-dataset=TChannel
+#dataset=TChannel
 #dataset=TWChannel
 #dataset=SbarChannel
-#dataset=TTBar
+dataset=TTBar
 #dataset=WJets
 dataset=ZJets
 #dataset=WW
@@ -33,8 +33,8 @@ dataset=ZJets
 #dataset=ZZ
 #dataset=QCDEle
 #dataset=Data
-tag=2J_0T_noSyst
-prefix=TreesEle
+tag=Notag
+prefix=TreesMu
 
 # if provided, assign command line parameters to variables
 [[ $1 != "" ]] && dataset=$1
@@ -58,8 +58,8 @@ fi
 
 OFCODE=0
 if [[ $1 != "-na" ]]; then
-    make -s analysis.exe || exit
-    time ./analysis.exe $EVENTS $FPATH/$FROOT_I $FROOT_O $RDIR $RTREE
+    make -s nTupleAnalyzer.exe || exit
+    time ./nTupleAnalyzer.exe $EVENTS $FPATH/$FROOT_I $FROOT_O $RDIR $RTREE
     OFCODE=$?
     [[ $OFCODE == 0 ]] || exit $OFCODE
 fi
