@@ -1,13 +1,14 @@
 #include "nTupleAnalyzer.h"
 #include <iostream>
-//#include <fstream>
-//#include "TFile.h"
+#include <fstream>
+#include "TFile.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TDirectoryFile.h"
-//#include "TH1D.h"
+#include "TH1D.h"
+#include "TMath.h"
 //#include "TH1F.h"
-//#include "TH1I.h"
+#include "TH1I.h"
 //#include "analysis.h"
 //#include <algorithm>
 #include <json/json.h>
@@ -82,11 +83,27 @@ int main(int argc, char **argv){
     }
     cout << "Entries in ROOT tree: " << nentries << endl;
     
-    for (int i=0; i<nentries; i++){
+    // Create the output ROOT file and book the histograms
+    TFile E(orfile,"recreate");
+    TH1D h_muPt("h_muPt","Muon Pt; PT (GeV); Muons", 25, 0, 100);
+    TH1D h_muEta("h_muEta","Muon eta; eta; Muons", 25, -4, 4);
+    TH1I h_muMult("h_muMult","Muon Multiplicity; Multiplicity; Events", 6, 0, 5);
+    
+    // determine the number of events to analyze
+    nevents= (nevents < nentries) ? nevents : nentries; // std::min(nevents,nentries);
+    if (nevents == -1) nevents = nentries;
+    
+    cout << "Will analyze " << nevents << " events\n";     //" events\n 1000X:";    
+    Long64_t i;
+    for (i=0; i<nevents; i++){
+        //if (i % 1000 == 0) cout << "+" << std::flush;
         myTree->GetEntry(i);
-        cout << "Event: " << i << ", muons: " << mu_n << endl;
+        if (debug) cout << "Event: " << i << ", muons: " << mu_n << endl;
+        h_muMult.Fill(mu_n);
         for (int j=0; j< mu_n; j++){
-            cout << "Muon #" << j << ": " 
+            h_muEta.Fill(mu_eta[j]);
+            h_muPt.Fill(TMath::Sqrt(mu_px[j]*mu_px[j]+mu_py[j]*mu_py[j]));
+            if (debug) cout << "Muon #" << j << ": " 
                  << "mu_charge: " << mu_charge[j]
                  << ", px: " << mu_px[j]
                  << ", py: " << mu_py[j]
@@ -97,7 +114,36 @@ int main(int argc, char **argv){
                  << endl;
         }
     }
-        
-        
+    E.Write();
+    E.Close();
+
+    cout << "\nAnalyzed " << i << " entries\n";
+    cout << "histograms written to: " << orfile << endl;
+    
+    // write report to JSON file
+    root["root_file"]=rjfile.Data();
+    root["root_tree_path"]=tdir.Data();
+    root["root_tree_name"] = ttree.Data();
+    root["events_total"] = nentries;
+    root["events_analyzed"] = nevents;
+    //root["events_yield_w"] = wevents;
+    //root["events_yield"] = y;
+    //root["Selection"]["Cut_0"]["Description"] = "Kinematic cuts";
+    //root["Selection"]["Cut_0"]["Passed"] = c0;
+    //root["Selection"]["Cut_1"]["Description"] = (isElectronDST) ? "MET Cut" : "MTW Cut";
+    //root["Selection"]["Cut_1"]["Passed"] = c1;
+    
+    Json::StyledWriter writer;
+    std::string outputConfig = writer.write( root );
+    stemp=(rjfile.Remove(0,rjfile.Last('/')+1)).Data();
+    stemp.ReplaceAll(".json","");
+    stemp.ReplaceAll(".root","");
+    stemp = "results/"+stemp + "-analysis.json";
+    std::ofstream out(stemp);
+    out << outputConfig << std::endl;
+    out.close();
+    std::cout << "analysis report written to: " << stemp << "\n";
+    delete T; 
+    return 0;        
         
 }

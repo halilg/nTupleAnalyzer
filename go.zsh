@@ -36,7 +36,7 @@ fi
 dataset=TTBar
 #dataset=Data
 tag=Notag
-prefix=TreesMu
+prefix=Events
 
 # if provided, assign command line parameters to variables
 [[ $1 != "" ]] && dataset=$1
@@ -68,6 +68,7 @@ fi
 OFCODE=0
 if [[ $1 != "-na" ]]; then
     make -s nTupleAnalyzer.exe || exit
+    mkdir -p results
     time ./nTupleAnalyzer.exe $EVENTS $FPATH/$FROOT_I $FROOT_O $RDIR $RTREE
     OFCODE=$?
     [[ $OFCODE == 0 ]] || exit $OFCODE
