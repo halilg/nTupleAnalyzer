@@ -1,4 +1,5 @@
 #include "nTupleAnalyzer.h"
+#include "event.h"
 #include <iostream>
 #include <fstream>
 #include "TFile.h"
@@ -20,17 +21,8 @@
 
 using namespace std;
 int main(int argc, char **argv){
-    // Muon variables
-    #define maxReco 30
-    int mu_n;
-    int mu_charge[maxReco];
-    double mu_px[maxReco];
-    double mu_py[maxReco];
-    double mu_pz[maxReco];
-    double mu_phi[maxReco];
-    double mu_theta[maxReco];
-    double mu_eta[maxReco];
-      
+
+    event myEvent;
     TString treeName;
     TString stemp;
     //treeName=tdir+"/"+ttree;
@@ -67,14 +59,14 @@ int main(int argc, char **argv){
     //cout << "Accessing tree: " << treeName << endl;
     //TTree* myTree = (TTree*)T.Get(treeName);
     TTree* myTree = T; //->GetTree();
-    myTree->SetBranchAddress("mu_n", &mu_n);
-    myTree->SetBranchAddress("mu_charge", mu_charge);
-    myTree->SetBranchAddress("mu_px", mu_px);
-    myTree->SetBranchAddress("mu_py", mu_py);
-    myTree->SetBranchAddress("mu_pz", mu_pz);
-    myTree->SetBranchAddress("mu_phi", mu_phi);
-    myTree->SetBranchAddress("mu_theta", mu_theta);
-    myTree->SetBranchAddress("mu_eta", mu_eta);
+    myTree->SetBranchAddress("mu_n", &myEvent.mu_n);
+    myTree->SetBranchAddress("mu_charge", myEvent.mu_charge);
+    myTree->SetBranchAddress("mu_px", myEvent.mu_px);
+    myTree->SetBranchAddress("mu_py", myEvent.mu_py);
+    myTree->SetBranchAddress("mu_pz", myEvent.mu_pz);
+    myTree->SetBranchAddress("mu_phi", myEvent.mu_phi);
+    myTree->SetBranchAddress("mu_theta", myEvent.mu_theta);
+    myTree->SetBranchAddress("mu_eta", myEvent.mu_eta);
     
     Long64_t nentries = myTree->GetEntries();
     if (nentries == 0){
@@ -98,19 +90,19 @@ int main(int argc, char **argv){
     for (i=0; i<nevents; i++){
         //if (i % 1000 == 0) cout << "+" << std::flush;
         myTree->GetEntry(i);
-        if (debug) cout << "Event: " << i << ", muons: " << mu_n << endl;
-        h_muMult.Fill(mu_n);
-        for (int j=0; j< mu_n; j++){
-            h_muEta.Fill(mu_eta[j]);
-            h_muPt.Fill(TMath::Sqrt(mu_px[j]*mu_px[j]+mu_py[j]*mu_py[j]));
+        if (debug) cout << "Event: " << i << ", muons: " << myEvent.mu_n << endl;
+        h_muMult.Fill(myEvent.mu_n);
+        for (int j=0; j< myEvent.mu_n; j++){
+            h_muEta.Fill(myEvent.mu_eta[j]);
+            h_muPt.Fill(TMath::Sqrt(myEvent.mu_px[j]*myEvent.mu_px[j]+myEvent.mu_py[j]*myEvent.mu_py[j]));
             if (debug) cout << "Muon #" << j << ": " 
-                 << "mu_charge: " << mu_charge[j]
-                 << ", px: " << mu_px[j]
-                 << ", py: " << mu_py[j]
-                 << ", pz: " << mu_pz[j]
-                 << ", phi: " << mu_phi[j]
-                 << ", theta: " << mu_theta[j]
-                 << ", eta: " << mu_eta[j]
+                 << "mu_charge: " << myEvent.mu_charge[j]
+                 << ", px: " << myEvent.mu_px[j]
+                 << ", py: " << myEvent.mu_py[j]
+                 << ", pz: " << myEvent.mu_pz[j]
+                 << ", phi: " << myEvent.mu_phi[j]
+                 << ", theta: " << myEvent.mu_theta[j]
+                 << ", eta: " << myEvent.mu_eta[j]
                  << endl;
         }
     }
