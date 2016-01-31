@@ -5,6 +5,8 @@
 class analysis {
     // private variables
     public:
+        analysis();
+        ~analysis();
         void new_event(const event&);
         void begin_job();
 };

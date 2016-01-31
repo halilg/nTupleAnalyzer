@@ -9,10 +9,10 @@ analysis::~analysis(){
     ;
 }
 
-analysis::new_event(event myEvent){
+void analysis::new_event(const event & myEvent){
     ;
 }
 
-analysis::begin_job(){
+void analysis::begin_job(){
     ;
 }

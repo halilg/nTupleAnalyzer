@@ -15,8 +15,8 @@ OBJDIR=tmp
 #all: $(OBJS)
 all: nTupleAnalyzer.exe jsoncpp_cheat.exe readcfg.exe
 
-nTupleAnalyzer.exe: nTupleAnalyzer.cc $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/json2tchain.o
-	$(CPP) $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/json2tchain.o $(LROOT) -o $@
+nTupleAnalyzer.exe: nTupleAnalyzer.cc $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/json2tchain.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/analysis.o
+	$(CPP) $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/analysis.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/json2tchain.o $(LROOT) -o $@
 
 jsoncpp_cheat.exe: jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o
 	$(CPP) jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o $(CPPFLAGS) -o $@
@@ -30,6 +30,9 @@ readcfg.exe: readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o
 
 
 #$(OBJS): | $(OBJDIR)
+
+$(OBJDIR)/analysis.o: analysis.cc analysis.h | $(OBJDIR)
+	$(CPP) -c analysis.cc $(CPPFLAGS) -o $@
 
 $(OBJDIR)/cfgreader.o: cfgreader.cc cfgreader.h | $(OBJDIR)
 	$(CPP) -c cfgreader.cc $(CPPFLAGS) -o $@

@@ -1,5 +1,6 @@
 #include "nTupleAnalyzer.h"
 #include "event.h"
+#include "analysis.h"
 #include <iostream>
 #include <fstream>
 #include "TFile.h"
@@ -23,6 +24,7 @@ using namespace std;
 int main(int argc, char **argv){
 
     event myEvent;
+    analysis myAnalysis;
     TString treeName;
     TString stemp;
     //treeName=tdir+"/"+ttree;
@@ -89,6 +91,7 @@ int main(int argc, char **argv){
     Long64_t i;
     for (i=0; i<nevents; i++){
         //if (i % 1000 == 0) cout << "+" << std::flush;
+        myAnalysis.new_event(myEvent);
         myTree->GetEntry(i);
         if (debug) cout << "Event: " << i << ", muons: " << myEvent.mu_n << endl;
         h_muMult.Fill(myEvent.mu_n);
