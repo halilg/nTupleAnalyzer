@@ -15,6 +15,6 @@ void analysis::new_event(const event & myEvent){
     //cout << "!mu_n:" << myEvent.mu_n << endl;
 }
 
-void analysis::begin_job(){
+void analysis::begin_analysis(){
     ;
 }

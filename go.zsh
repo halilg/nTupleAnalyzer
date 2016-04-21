@@ -18,12 +18,15 @@ fi
 # This piece of code attempts to fix it.
 ostype=$(uname)
 if [ $ostype = "Darwin" ]; then
+    # Fix for El Capitan:
+    # http://stackoverflow.com/questions/35568122/why-isnt-dyld-library-path-being-propagated-here
     if ((! $+DYLD_LIBRARY_PATH)); then
-        echo "[$myname] DYLD_LIBRARY_PATH is not defined. Attempting to fix."
-        wdir=$PWD
-        cd $ROOTSYS
-        source bin/thisroot.sh
-        cd $wdir
+        #echo "[$myname] DYLD_LIBRARY_PATH is not defined. Attempting to fix."
+        #wdir=$PWD
+        #cd $ROOTSYS
+        #source bin/thisroot.sh
+        #cd $wdir
+        DYLD_LIBRARY_PATH=$ROOTSYS/lib
     fi
 #else if [ $ostype = "Linux" ]; then
 #    if ((! $+LD_LIBRARY_PATH)); then
@@ -60,7 +63,7 @@ fi
 
 #Let's check if the input file exists
 if [ ! -f $FPATH/$FROOT_I ]; then
-    echo "[$myname] Input file not found: $FROOT_I"
+    echo "[$myname] Input file not found: $FPATH/$FROOT_I"
     exit
 fi
 #echo $FROOT_O

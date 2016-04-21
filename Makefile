@@ -9,6 +9,7 @@ LROOT=`root-config --glibs`
 CROOT=`root-config --cflags`
 LOTHER= #-lboost_system
 OBJDIR=tmp
+LDFLAGS=-Wl,-rpath,$(ROOTSYS)/lib # Fix for El Capitan
 #OBJS := $(addprefix $(OBJDIR)/, jsoncpp.o json2tchain.o)
 #nTupleAnalyzer.o
 
@@ -16,13 +17,13 @@ OBJDIR=tmp
 all: nTupleAnalyzer.exe jsoncpp_cheat.exe readcfg.exe
 
 nTupleAnalyzer.exe: nTupleAnalyzer.cc $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/json2tchain.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/analysis.o
-	$(CPP) $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/analysis.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/json2tchain.o $(LROOT) -o $@
+	$(CPP) $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/analysis.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/json2tchain.o $(LROOT) $(LDFLAGS) -o $@
 
 jsoncpp_cheat.exe: jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o
-	$(CPP) jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o $(CPPFLAGS) -o $@
+	$(CPP) jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o $(CPPFLAGS) $(LDFLAGS) -o $@
 
 readcfg.exe: readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o
-	$(CPP) $(CPPFLAGS) readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o -o $@
+	$(CPP) $(CPPFLAGS) readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o $(LDFLAGS) -o $@
 
 #$(OBJDIR)/%.o : %.cc
 	#$(CPP) $(CPPFLAGS) $(CROOT) -o $@ $<

@@ -8,7 +8,7 @@ class analysis {
         analysis();
         ~analysis();
         void new_event(const event&);
-        void begin_job();
+        void begin_analysis();
 };
 
 #endif
