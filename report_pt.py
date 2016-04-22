@@ -42,6 +42,8 @@ for ptv in pt:
     
 graphst =TGraph ( len(stvals) , array("f", pt) , array("f", stvals)) ;
 graphqcd =TGraph ( len(qcdvals) , array("f", pt) , array("f", qcdvals)) ;
+
+graphcorr =TGraph ( len(qcdvals) , array("f", qcdvals) , array("f", stvals)) ;
     
 graphst.SetMarkerStyle(22)
 graphst.SetMarkerColor(4)
@@ -63,3 +65,13 @@ graphqcd.Draw("SAME PL")
 leg.Draw();
 
 c1.Print("trigger.png")
+
+c1.Clear()
+
+graphcorr.SetTitle("QCD Efficiency vs Signal Efficiency")
+graphcorr.GetXaxis().SetTitle("QCD Efficiency")
+graphcorr.GetYaxis().SetTitle("Signal Efficiency")
+graphcorr.SetMarkerColor(4)
+graphcorr.Draw("CA*")
+c1.Print("corr.png")
+
