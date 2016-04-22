@@ -33,7 +33,7 @@ readcfg.exe: readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o
 #$(OBJS): | $(OBJDIR)
 
 $(OBJDIR)/analysis.o: analysis.cc analysis.h | $(OBJDIR)
-	$(CPP) -c analysis.cc $(CPPFLAGS) -o $@
+	$(CPP) -c analysis.cc $(CPPFLAGS) $(CROOT) -o $@
 
 $(OBJDIR)/cfgreader.o: cfgreader.cc cfgreader.h | $(OBJDIR)
 	$(CPP) -c cfgreader.cc $(CPPFLAGS) -o $@
