@@ -45,6 +45,7 @@ int main(int argc, char **argv){
     TString tdir(argv[4]);
     TString ttree(argv[5]);
 
+    TH1D * h_gen_weight;
     TH1D * h_muPt;
     TH1D * h_muEta;
     TH1I * h_muMult;
@@ -88,7 +89,7 @@ int main(int argc, char **argv){
     
     TTree* myTree = T; //->GetTree();
     myTree->SetBranchAddress("gen_weight",&myEvent.gen_weight);
-    
+    h_gen_weight = new TH1D ("h_gen_weight","Event Weight (GEN); Weight (GeV); Events", 50, -400, 400);
     if (myTree->GetBranch("mu_n")) {
         myEvent.is_mu=true;
         myTree->SetBranchAddress("mu_n", &myEvent.mu_n);
@@ -139,7 +140,7 @@ int main(int argc, char **argv){
     Long64_t y=0;
     Long64_t c0=0;
     double c0w=0;
-    unsigned int cut_ele_PT = 5; // GeV
+    unsigned int cut_ele_PT = 0; // GeV
     bool eventOK;
     bool c0OK;
     for (i=0; i<nevents; i++){
@@ -149,6 +150,7 @@ int main(int argc, char **argv){
         myAnalysis.new_event(myEvent);
         myTree->GetEntry(i);
         swevents += myEvent.gen_weight;
+        h_gen_weight->Fill(myEvent.gen_weight);
         if (myEvent.is_mu){
             if (debug) cout << "Event: " << i << ", muons: " << myEvent.mu_n << endl;
             h_muMult->Fill(myEvent.mu_n);
