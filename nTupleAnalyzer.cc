@@ -21,30 +21,77 @@
 
 using namespace std;
 int main(int argc, char **argv){
-
+    bool debug=true;
+    debug=false;
     event myEvent;
     analysis myAnalysis;
     TString treeName;
     TString stemp;
     //treeName=tdir+"/"+ttree;
     TChain * T;
-    Json::Value root;   // will contains the root value after parsing
-    bool debug=true;
-    debug=false;
-    if (argc < 6){
-        // Tell the user how to run the program
-        std::cerr << "Usage: " << argv[0] << " <events> <iroot file> <oroot file> <TDirectory> <TTree>" << std::endl;
-        return 1;
-    }
+    Json::Value rooti;   // will contains the root value after parsing
+    Json::Value rooto;   // will contains the root value after parsing
 
-    Long64_t nevents = std::atoll(argv[1]);
     double wevents = 0;
     double swevents = 0;
-    TString rjfile(argv[2]);
-    TString orfile(argv[3]);
-    TString tdir(argv[4]);
-    TString ttree(argv[5]);
 
+    if (argc < 2){
+        // Tell the user how to run the program
+        std::cerr << "Usage: " << argv[0] << " <configuration file>" << std::endl;
+        return 1;
+    }
+    std::string cfgfile(argv[1]);
+
+    int minpt=0;
+    if (argc > 2){
+        minpt=std::atoi(argv[2]);
+    }    
+    std::cout << minpt << std::endl;
+    /////////////////////////////////////////////////////////
+    
+    // read configuration
+    Json::Reader reader;
+    std::string line, inputConfig;
+    
+    if (debug)  std::cout << "Reading global configuration " << cfgfile << " : ";
+    std::ifstream myfile (cfgfile);
+    if (myfile.is_open()){
+        while ( getline (myfile,line) ){ inputConfig += line; }
+        myfile.close();
+    } else {
+      std::cerr << "Unable to open file: " << cfgfile << std::endl;
+      exit(1);
+    }
+    
+    if (debug) std::cout << "parsing json : ";
+    bool parsingSuccessful = reader.parse( inputConfig, rooti );
+    if ( !parsingSuccessful )
+    {
+        // report to the user the failure and their locations in the document.
+        std::cerr  << "Failed to parse configuration\n"
+                   << reader.getFormattedErrorMessages();
+        exit(1);
+    }
+    if (debug) std::cout << "success.\n";
+    
+    // read the configuration
+    //vector<string> datasets;
+    //vector<string> categories;
+    long long int nevents=rooti["analysis"]["maxEvents"].asInt64();
+    TString rjfile(rooti["io"]["inRootFile"].asString());
+    TString orfile(rooti["io"]["outRootFile"].asString());
+    TString tdir(rooti["io"]["treeDir"].asString());
+    TString ttree(rooti["io"]["treeName"].asString());
+    std::cout << nevents <<   std::endl
+              << rjfile << std::endl
+              << orfile << std::endl
+              << tdir << std::endl
+              << ttree << std::endl;
+
+    rooto["configuration"]["io"]=rooti["io"];
+    rooto["configuration"]["analysis"]=rooti["analysis"];
+    /////////////////////////////////////////////////////////
+    
     TH1D * h_gen_weight;
     TH1D * h_muPt;
     TH1D * h_muEta;
@@ -143,7 +190,7 @@ int main(int argc, char **argv){
     Long64_t y=0;
     Long64_t c0=0;
     double c0w=0;
-    unsigned int cut_ele_PT = 0; // GeV
+    unsigned int cut_ele_PT = minpt; // GeV
     bool eventOK;
     bool c0OK;
     for (i=0; i<nevents; i++){
@@ -223,22 +270,22 @@ int main(int argc, char **argv){
     sprintf(buff,"Max Electron PT > %i GeV)", cut_ele_PT);
 // std::string buffAsStdStr = buff;
     
-    root["root_file"]=rjfile.Data();
-    root["root_tree_path"]=tdir.Data();
-    root["root_tree_name"] = ttree.Data();
-    root["events_total"] = nentries;
-    root["events_analyzed"] = nevents;
-    root["events_analyzed_sumw"] = swevents;
-    root["events_yield_w"] = wevents;
-    root["events_yield"] = y;
-    root["Selection"]["Cut_0"]["Description"] = buff;
-    root["Selection"]["Cut_0"]["Passed_i"] = c0;
-    root["Selection"]["Cut_0"]["Passed_sumw"] = c0w;
-    //root["Selection"]["Cut_1"]["Description"] = (isElectronDST) ? "MET Cut" : "MTW Cut";
-    //root["Selection"]["Cut_1"]["Passed"] = c1;
+    //rooto["root_file"]=rjfile.Data();
+    //rooto["root_tree_path"]=tdir.Data();
+    //rooto["root_tree_name"] = ttree.Data();
+    rooto["events_total"] = nentries;
+    rooto["events_analyzed"] = nevents;
+    rooto["events_analyzed_sumw"] = swevents;
+    rooto["events_yield_w"] = wevents;
+    rooto["events_yield"] = y;
+    rooto["Selection"]["Cut_0"]["Description"] = buff;
+    rooto["Selection"]["Cut_0"]["Passed_i"] = c0;
+    rooto["Selection"]["Cut_0"]["Passed_sumw"] = c0w;
+    //rooto["Selection"]["Cut_1"]["Description"] = (isElectronDST) ? "MET Cut" : "MTW Cut";
+    //rooto["Selection"]["Cut_1"]["Passed"] = c1;
     
     Json::StyledWriter writer;
-    std::string outputConfig = writer.write( root );
+    std::string outputConfig = writer.write( rooto );
     stemp=(rjfile.Remove(0,rjfile.Last('/')+1)).Data();
     stemp.ReplaceAll(".json","");
     stemp.ReplaceAll(".root","");
@@ -249,5 +296,4 @@ int main(int argc, char **argv){
     std::cout << "analysis report written to: " << stemp << "\n";
     delete T; 
     return 0;        
-        
 }
