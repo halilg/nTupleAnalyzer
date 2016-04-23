@@ -52,6 +52,7 @@ int main(int argc, char **argv){
     TH1D * h_elePt;
     TH1D * h_eleEta;
     TH1I * h_eleMult;
+    TH1D * h_eleID;
     TH1D * h_photPt;
     TH1D * h_photEta;
     TH1I * h_photMult;
@@ -117,11 +118,13 @@ int main(int argc, char **argv){
         myTree->SetBranchAddress("ele_phi", myEvent.ele_phi);
         myTree->SetBranchAddress("ele_theta", myEvent.ele_theta);
         myTree->SetBranchAddress("ele_eta", myEvent.ele_eta);
+        myTree->SetBranchAddress("ele_id", myEvent.ele_id);
 
         // book the histograms
         h_elePt = new TH1D ("h_elePt","Electron Pt; PT (GeV); Electrons", 25, 0, 100);
         h_eleEta = new TH1D ("h_eleEta","Electron eta; eta; Electrons", 25, -4, 4);
         h_eleMult = new TH1I("h_eleMult","Electron Multiplicity; Multiplicity; Events", 6, 0, 5);
+        h_eleID = new TH1D("h_eleID","Electron ID; Electrons", 11, 0, 10);
     }
     
     Long64_t nentries = myTree->GetEntries();
@@ -175,11 +178,12 @@ int main(int argc, char **argv){
             double PT2;
             for (int j=0; j< myEvent.ele_n; j++){
                 PT2 = myEvent.ele_px[0]*myEvent.ele_px[0] + myEvent.ele_py[0]*myEvent.ele_py[0];
-                if (PT2 > cut_ele_PT*cut_ele_PT){
+                if (PT2 > cut_ele_PT*cut_ele_PT && myEvent.ele_id[j] == 1){
                     c0OK=true;
                 }
                 h_eleEta->Fill(myEvent.ele_eta[j], myEvent.gen_weight);
                 h_elePt->Fill(TMath::Sqrt(myEvent.ele_px[j]*myEvent.ele_px[j]+myEvent.ele_py[j]*myEvent.ele_py[j]), myEvent.gen_weight);
+                h_eleID->Fill(myEvent.ele_id[j], myEvent.gen_weight);
                 if (debug) cout << "Electron #" << j << ": " 
                      << "ele_charge: " << myEvent.ele_charge[j]
                      << ", px: " << myEvent.ele_px[j]
@@ -188,6 +192,7 @@ int main(int argc, char **argv){
                      << ", phi: " << myEvent.ele_phi[j]
                      << ", theta: " << myEvent.ele_theta[j]
                      << ", eta: " << myEvent.ele_eta[j]
+                     << ", id: " << myEvent.ele_id[j]
                      << endl;
             }
             if (c0OK){

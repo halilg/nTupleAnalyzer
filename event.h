@@ -29,7 +29,7 @@ class event {
         double ele_phi[maxReco];
         double ele_theta[maxReco];
         double ele_eta[maxReco];
-        double ele_iso[maxReco];
+        double ele_id[maxReco];
         
         // Photon variables
         bool is_phot;
