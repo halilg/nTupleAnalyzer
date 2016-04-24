@@ -18,6 +18,12 @@
 
 // https://github.com/halilg/singleTopAnalysis/blob/master/analysis.cc
 // Main analyzer. Reads a single ROOT tree, applies cuts, reports cut efficiencies and generates histograms
+//
+
+TString basename(const TString & path){
+    TString _path(path);
+    return _path.Remove(0,_path.Last('/')+1);
+}
 
 using namespace std;
 int main(int argc, char **argv){
@@ -26,11 +32,10 @@ int main(int argc, char **argv){
     event myEvent;
     analysis myAnalysis;
     TString treeName;
-    TString stemp;
     //treeName=tdir+"/"+ttree;
     TChain * T;
-    Json::Value rooti;   // will contains the root value after parsing
-    Json::Value rooto;   // will contains the root value after parsing
+    Json::Value rooti;   // will contain the root value for configuration
+    Json::Value rooto;   // will contain the root value for report
 
     double wevents = 0;
     double swevents = 0;
@@ -46,52 +51,52 @@ int main(int argc, char **argv){
     if (argc > 2){
         minpt=std::atoi(argv[2]);
     }    
-    std::cout << minpt << std::endl;
+    if (debug) std::cout << "command line argument: " << minpt << std::endl;
+    
     /////////////////////////////////////////////////////////
-    
-    // read configuration
-    Json::Reader reader;
-    std::string line, inputConfig;
-    
-    if (debug)  std::cout << "Reading global configuration " << cfgfile << " : ";
-    std::ifstream myfile (cfgfile);
-    if (myfile.is_open()){
-        while ( getline (myfile,line) ){ inputConfig += line; }
-        myfile.close();
-    } else {
-      std::cerr << "Unable to open file: " << cfgfile << std::endl;
-      exit(1);
-    }
-    
-    if (debug) std::cout << "parsing json : ";
-    bool parsingSuccessful = reader.parse( inputConfig, rooti );
-    if ( !parsingSuccessful )
+    // read configuration file
     {
-        // report to the user the failure and their locations in the document.
-        std::cerr  << "Failed to parse configuration\n"
-                   << reader.getFormattedErrorMessages();
-        exit(1);
+        Json::Reader reader;
+        std::string line, inputConfig;
+        
+        if (debug)  std::cout << "Reading global configuration " << cfgfile << " : ";
+        std::ifstream myfile (cfgfile);
+        if (myfile.is_open()){
+            while ( getline (myfile,line) ){ inputConfig += line; }
+            myfile.close();
+        } else {
+          std::cerr << "Unable to open file: " << cfgfile << std::endl;
+          exit(1);
+        }
+        
+        if (debug) std::cout << "parsing json : ";
+        bool parsingSuccessful = reader.parse( inputConfig, rooti );
+        if ( !parsingSuccessful )
+        {
+            // report to the user the failure and their locations in the document.
+            std::cerr  << "Failed to parse configuration\n"
+                       << reader.getFormattedErrorMessages();
+            exit(1);
+        }
+        if (debug) std::cout << "success.\n";
     }
-    if (debug) std::cout << "success.\n";
     
-    // read the configuration
-    //vector<string> datasets;
-    //vector<string> categories;
     long long int nevents=rooti["analysis"]["maxEvents"].asInt64();
     TString rjfile(rooti["io"]["inRootFile"].asString());
-    TString orfile(rooti["io"]["outRootFile"].asString());
     TString tdir(rooti["io"]["treeDir"].asString());
     TString ttree(rooti["io"]["treeName"].asString());
-    std::cout << nevents <<   std::endl
+    TString ordir(rooti["io"]["outRootDir"].asString());
+    TString ojdir(rooti["io"]["outJSONDir"].asString());
+    if (debug) std::cout << nevents <<   std::endl
               << rjfile << std::endl
-              << orfile << std::endl
+              << ordir << std::endl
+              << ojdir << std::endl
               << tdir << std::endl
               << ttree << std::endl;
-
     rooto["configuration"]["io"]=rooti["io"];
     rooto["configuration"]["analysis"]=rooti["analysis"];
     /////////////////////////////////////////////////////////
-    
+    //return 0;
     TH1D * h_gen_weight;
     TH1D * h_muPt;
     TH1D * h_muEta;
@@ -113,7 +118,7 @@ int main(int argc, char **argv){
     treeName=tdir+"/"+ttree;
     bool use_weights=true;        // is the input file a json file?
     if (debug) cout << "will analyze " << rjfile << endl;
-    if (rjfile.Contains(".json")){
+    if (rjfile.EndsWith(".json")){
         T = json2tchain(treeName, rjfile);
         if (debug) cout << "received chain contains " <<  T->GetEntries() << " events" << endl;
     } else {
@@ -127,7 +132,11 @@ int main(int argc, char **argv){
     //TTree* myTree = (TTree*)T.Get(treeName);
 
     // Create the output ROOT file
-    TFile E(orfile,"recreate");
+    TString ofname(ordir+TString("/h-")+basename(rjfile.Data()));
+    if (ofname.EndsWith(".json")) ofname=ofname+TString(".root");
+
+    if (debug) std::cout << "Creating: " << ofname << std::endl;
+    TFile E(ofname,"recreate");
     
     myEvent.is_mu=false;
     myEvent.is_ele=false;
@@ -262,7 +271,7 @@ int main(int argc, char **argv){
         cout << "\nLooped through " << i << " entries\n";
     else
         cout << "\nAnalyzed " << i << " entries\n";
-    cout << "histograms written to: " << orfile << endl;
+    cout << "histograms written to: " << ofname << endl;
     
     // write report to JSON file
     
@@ -286,10 +295,11 @@ int main(int argc, char **argv){
     
     Json::StyledWriter writer;
     std::string outputConfig = writer.write( rooto );
+    TString stemp;
     stemp=(rjfile.Remove(0,rjfile.Last('/')+1)).Data();
-    stemp.ReplaceAll(".json","");
-    stemp.ReplaceAll(".root","");
-    stemp = "results/"+stemp + "-analysis.json";
+    if (stemp.EndsWith(".json")) stemp.Remove(stemp.Length()-5,stemp.Length());
+    if (stemp.EndsWith(".root")) stemp.Remove(stemp.Length()-5,stemp.Length());
+    stemp = ojdir+'/'+stemp + "-analysis.json";
     std::ofstream out(stemp);
     out << outputConfig << std::endl;
     out.close();

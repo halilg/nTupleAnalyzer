@@ -4,8 +4,8 @@ from ROOT import TGraph, TCanvas, TLegend, gROOT
 from array import array
 
 gROOT.SetBatch(True)
-pt=[0,1,2,3,4,5,10,20,30,40,50,75]
-qcdfn="nTuple_QCD_023FCE0B-300A-E511-BE68-001E673973C8-analysis.json"
+pt=[00,01,02,04,05,07,10,15,18,20,22,24,26,30,35,40,50,75]
+qcdfn="nTuple_QCD_multi-analysis.json"
 stfn="nTuple_ST_007E248B-54F2-E311-A601-848F69FD4586-analysis.json"
 
 def readJSON(fname):
@@ -20,8 +20,12 @@ c1.SetGrid()
 stvals=[]
 qcdvals=[]
 
+print "  PT   Eff_Sig  Eff_QCD"
+print "(GeV)"
+print " ----------------------"
+
 for ptv in pt:
-    prefix="pt%02i - " % ptv
+    prefix="PT%02i-" % ptv
     fnamest=prefix + stfn
     fnameqcd=prefix + qcdfn
     datast=readJSON(fnamest)
@@ -38,7 +42,7 @@ for ptv in pt:
     stvals.append(wpassedst/wsumst)
     qcdvals.append(wpassedqcd/wsumqcd)
     
-    print "%2d   %5.3f   %5.3f" % (ptv, stvals[-1], qcdvals[-1])
+    print "  %2d   %6.4f   %7.5f" % (ptv, stvals[-1], qcdvals[-1])
     
 graphst =TGraph ( len(stvals) , array("f", pt) , array("f", stvals)) ;
 graphqcd =TGraph ( len(qcdvals) , array("f", pt) , array("f", qcdvals)) ;
