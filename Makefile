@@ -16,8 +16,8 @@ LDFLAGS=-Wl,-rpath,$(ROOTSYS)/lib # Fix for El Capitan
 #all: $(OBJS)
 all: nTupleAnalyzer.exe jsoncpp_cheat.exe readcfg.exe
 
-nTupleAnalyzer.exe: nTupleAnalyzer.cc $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/json2tchain.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/analysis.o
-	$(CPP) $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/analysis.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/json2tchain.o $(LROOT) $(LDFLAGS) -o $@
+nTupleAnalyzer.exe: nTupleAnalyzer.cc $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/json2tchain.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/analysis.o $(OBJDIR)/assign_branches.o
+	$(CPP) $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/analysis.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/json2tchain.o $(OBJDIR)/assign_branches.o $(LROOT) $(LDFLAGS) -o $@
 
 jsoncpp_cheat.exe: jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o
 	$(CPP) jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o $(CPPFLAGS) $(LDFLAGS) -o $@
@@ -31,6 +31,9 @@ readcfg.exe: readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o
 
 
 #$(OBJS): | $(OBJDIR)
+
+$(OBJDIR)/assign_branches.o: assign_branches.cc | $(OBJDIR)
+	$(CPP) -c assign_branches.cc $(CPPFLAGS) $(CROOT) -o $@
 
 $(OBJDIR)/analysis.o: analysis.cc analysis.h | $(OBJDIR)
 	$(CPP) -c analysis.cc $(CPPFLAGS) $(CROOT) -o $@

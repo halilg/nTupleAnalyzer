@@ -19,6 +19,8 @@
 // https://github.com/halilg/singleTopAnalysis/blob/master/analysis.cc
 // Main analyzer. Reads a single ROOT tree, applies cuts, reports cut efficiencies and generates histograms
 //
+void assign_branches(TTree* , event &);
+
 
 TString basename(const TString & path){
     TString _path(path);
@@ -138,44 +140,20 @@ int main(int argc, char **argv){
     if (debug) std::cout << "Creating: " << ofname << std::endl;
     TFile E(ofname,"recreate");
     
-    myEvent.is_mu=false;
-    myEvent.is_ele=false;
-    myEvent.is_phot=false;
-    myEvent.is_jet=false;
-    myEvent.is_MET=false;
-    
     TTree* myTree = T; //->GetTree();
     myTree->SetBranchAddress("gen_weight",&myEvent.gen_weight);
     h_gen_weight = new TH1D ("h_gen_weight","Event Weight (GEN); Weight (GeV); Events", 50, -400, 400);
-    if (myTree->GetBranch("mu_n")) {
-        myEvent.is_mu=true;
-        myTree->SetBranchAddress("mu_n", &myEvent.mu_n);
-        myTree->SetBranchAddress("mu_charge", myEvent.mu_charge);
-        myTree->SetBranchAddress("mu_px", myEvent.mu_px);
-        myTree->SetBranchAddress("mu_py", myEvent.mu_py);
-        myTree->SetBranchAddress("mu_pz", myEvent.mu_pz);
-        myTree->SetBranchAddress("mu_phi", myEvent.mu_phi);
-        myTree->SetBranchAddress("mu_theta", myEvent.mu_theta);
-        myTree->SetBranchAddress("mu_eta", myEvent.mu_eta);
-
+    
+    assign_branches(myTree, myEvent);
+    
+    if (myEvent.is_mu){
         // book the histograms
         h_muPt = new TH1D ("h_muPt","Muon Pt; PT (GeV); Muons", 25, 0, 100);
         h_muEta = new TH1D ("h_muEta","Muon eta; eta; Muons", 25, -4, 4);
         h_muMult = new TH1I("h_muMult","Muon Multiplicity; Multiplicity; Events", 6, 0, 5);
     }
-
-    if (myTree->GetBranch("ele_n")) {
-        myEvent.is_ele=true;
-        myTree->SetBranchAddress("ele_n", &myEvent.ele_n);
-        myTree->SetBranchAddress("ele_charge", myEvent.ele_charge);
-        myTree->SetBranchAddress("ele_px", myEvent.ele_px);
-        myTree->SetBranchAddress("ele_py", myEvent.ele_py);
-        myTree->SetBranchAddress("ele_pz", myEvent.ele_pz);
-        myTree->SetBranchAddress("ele_phi", myEvent.ele_phi);
-        myTree->SetBranchAddress("ele_theta", myEvent.ele_theta);
-        myTree->SetBranchAddress("ele_eta", myEvent.ele_eta);
-        myTree->SetBranchAddress("ele_id", myEvent.ele_id);
-
+    
+    if (myEvent.is_ele) {
         // book the histograms
         h_elePt = new TH1D ("h_elePt","Electron Pt; PT (GeV); Electrons", 25, 0, 100);
         h_eleEta = new TH1D ("h_eleEta","Electron eta; eta; Electrons", 25, -4, 4);
@@ -186,7 +164,7 @@ int main(int argc, char **argv){
     Long64_t nentries = myTree->GetEntries();
     if (nentries == 0){
         cerr << "ROOT tree had no events\n";
-        return 1;
+        return 0;
     }
     cout << "Entries in ROOT tree: " << nentries << endl;
     
