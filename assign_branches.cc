@@ -7,6 +7,7 @@ void assign_branches(TTree* myTree, event &myEvent){
     myEvent.is_phot=false;
     myEvent.is_jet=false;
     myEvent.is_MET=false;
+    
     if (myTree->GetBranch("mu_n")) {
         myEvent.is_mu=true;
         myTree->SetBranchAddress("mu_n", &myEvent.mu_n);
