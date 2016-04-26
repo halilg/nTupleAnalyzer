@@ -6,6 +6,7 @@ class event {
     // private variables
     public:
         // gen variables
+        bool is_genw;        
         double gen_weight;
 
         // Muon variables

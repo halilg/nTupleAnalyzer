@@ -10,9 +10,6 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TDirectoryFile.h"
-#include "TH1D.h"
-#include "TMath.h"
-#include "TH1I.h"
 #include <json/json.h>
 #include <json2tchain.h>
 
@@ -39,8 +36,6 @@ int main(int argc, char **argv){
     Json::Value rooti;   // will contain the root value for configuration
     Json::Value rooto;   // will contain the root value for report
 
-    double wevents = 0;
-    double swevents = 0;
 
     if (argc < 2){
         // Tell the user how to run the program
@@ -83,39 +78,22 @@ int main(int argc, char **argv){
         if (debug) std::cout << "success.\n";
     }
     
-    long long int nevents=rooti["analysis"]["maxEvents"].asInt64();
-    TString rjfile(rooti["io"]["inRootFile"].asString());
-    TString tdir(rooti["io"]["treeDir"].asString());
-    TString ttree(rooti["io"]["treeName"].asString());
-    TString ordir(rooti["io"]["outRootDir"].asString());
-    TString ojdir(rooti["io"]["outJSONDir"].asString());
+    long long int nevents=rooti["framework"]["maxEvents"].asInt64();
+    TString rjfile(rooti["framework"]["inRootFile"].asString());
+    TString tdir(rooti["framework"]["treeDir"].asString());
+    TString ttree(rooti["framework"]["treeName"].asString());
+    TString ordir(rooti["framework"]["outRootDir"].asString());
+    TString ojdir(rooti["framework"]["outJSONDir"].asString());
     if (debug) std::cout << nevents <<   std::endl
               << rjfile << std::endl
               << ordir << std::endl
               << ojdir << std::endl
               << tdir << std::endl
               << ttree << std::endl;
-    rooto["configuration"]["io"]=rooti["io"];
-    rooto["configuration"]["analysis"]=rooti["analysis"];
+
     /////////////////////////////////////////////////////////
     //return 0;
-    TH1D * h_gen_weight;
-    TH1D * h_muPt;
-    TH1D * h_muEta;
-    TH1I * h_muMult;
-    TH1D * h_elePt;
-    TH1D * h_eleEta;
-    TH1I * h_eleMult;
-    TH1D * h_eleID;
-    TH1D * h_photPt;
-    TH1D * h_photEta;
-    TH1I * h_photMult;
-    TH1D * h_jetPt;
-    TH1D * h_jetEta;
-    TH1I * h_jetMult;
-    TH1D * h_METPt;
-    TH1D * h_METEta;
-    TH1I * h_METMult;
+
     
     treeName=tdir+"/"+ttree;
     bool use_weights=true;        // is the input file a json file?
@@ -141,25 +119,8 @@ int main(int argc, char **argv){
     TFile E(ofname,"recreate");
     
     TTree* myTree = T; //->GetTree();
-    myTree->SetBranchAddress("gen_weight",&myEvent.gen_weight);
-    h_gen_weight = new TH1D ("h_gen_weight","Event Weight (GEN); Weight (GeV); Events", 50, -400, 400);
-    
     assign_branches(myTree, myEvent);
-    
-    if (myEvent.is_mu){
-        // book the histograms
-        h_muPt = new TH1D ("h_muPt","Muon Pt; PT (GeV); Muons", 25, 0, 100);
-        h_muEta = new TH1D ("h_muEta","Muon eta; eta; Muons", 25, -4, 4);
-        h_muMult = new TH1I("h_muMult","Muon Multiplicity; Multiplicity; Events", 6, 0, 5);
-    }
-    
-    if (myEvent.is_ele) {
-        // book the histograms
-        h_elePt = new TH1D ("h_elePt","Electron Pt; PT (GeV); Electrons", 25, 0, 100);
-        h_eleEta = new TH1D ("h_eleEta","Electron eta; eta; Electrons", 25, -4, 4);
-        h_eleMult = new TH1I("h_eleMult","Electron Multiplicity; Multiplicity; Events", 6, 0, 5);
-        h_eleID = new TH1D("h_eleID","Electron ID; Electrons", 11, 0, 10);
-    }
+    myAnalysis.begin_analysis(rooti["analysis"], myEvent);
     
     Long64_t nentries = myTree->GetEntries();
     if (nentries == 0){
@@ -174,102 +135,23 @@ int main(int argc, char **argv){
     
     cout << "Will analyze " << nevents << " events\n";     //" events\n 1000X:";    
     Long64_t i;
-    Long64_t y=0;
-    Long64_t c0=0;
-    double c0w=0;
-    unsigned int cut_ele_PT = minpt; // GeV
-    bool eventOK;
-    bool c0OK;
     for (i=0; i<nevents; i++){
-        //if (i % 1000 == 0) cout << "+" << std::flush;
-        eventOK = false;
-        c0OK = false;
-        myAnalysis.new_event(myEvent);
         myTree->GetEntry(i);
-        swevents += myEvent.gen_weight;
-        h_gen_weight->Fill(myEvent.gen_weight);
-        if (myEvent.is_mu){
-            if (debug) cout << "Event: " << i << ", muons: " << myEvent.mu_n << endl;
-            h_muMult->Fill(myEvent.mu_n);
-            for (int j=0; j< myEvent.mu_n; j++){
-                h_muEta->Fill(myEvent.mu_eta[j]);
-                h_muPt->Fill(TMath::Sqrt(myEvent.mu_px[j]*myEvent.mu_px[j]+myEvent.mu_py[j]*myEvent.mu_py[j]));
-                if (debug) cout << "Muon #" << j << ": " 
-                     << "mu_charge: " << myEvent.mu_charge[j]
-                     << ", px: " << myEvent.mu_px[j]
-                     << ", py: " << myEvent.mu_py[j]
-                     << ", pz: " << myEvent.mu_pz[j]
-                     << ", phi: " << myEvent.mu_phi[j]
-                     << ", theta: " << myEvent.mu_theta[j]
-                     << ", eta: " << myEvent.mu_eta[j]
-                     << endl;
-            }
-        }
-        
-        if (myEvent.is_ele){
-            if (debug) cout << "Event: " << i << ", electrons: " << myEvent.ele_n << endl;
-            h_eleMult->Fill(myEvent.ele_n, myEvent.gen_weight);
-            double PT2;
-            for (int j=0; j< myEvent.ele_n; j++){
-                PT2 = myEvent.ele_px[0]*myEvent.ele_px[0] + myEvent.ele_py[0]*myEvent.ele_py[0];
-                if (PT2 > cut_ele_PT*cut_ele_PT && myEvent.ele_id[j] == 1){
-                    c0OK=true;
-                }
-                h_eleEta->Fill(myEvent.ele_eta[j], myEvent.gen_weight);
-                h_elePt->Fill(TMath::Sqrt(myEvent.ele_px[j]*myEvent.ele_px[j]+myEvent.ele_py[j]*myEvent.ele_py[j]), myEvent.gen_weight);
-                h_eleID->Fill(myEvent.ele_id[j], myEvent.gen_weight);
-                if (debug) cout << "Electron #" << j << ": " 
-                     << "ele_charge: " << myEvent.ele_charge[j]
-                     << ", px: " << myEvent.ele_px[j]
-                     << ", py: " << myEvent.ele_py[j]
-                     << ", pz: " << myEvent.ele_pz[j]
-                     << ", phi: " << myEvent.ele_phi[j]
-                     << ", theta: " << myEvent.ele_theta[j]
-                     << ", eta: " << myEvent.ele_eta[j]
-                     << ", id: " << myEvent.ele_id[j]
-                     << endl;
-            }
-            if (c0OK){
-                c0 += 1;
-                c0w += myEvent.gen_weight;
-            }
-        }
-
-        eventOK=c0OK;
-        if (eventOK){
-            wevents += myEvent.gen_weight;
-            y += 1;
-        }
-
+        myAnalysis.new_event(myEvent);
     }
     E.Write();
     E.Close();
+    
+    myAnalysis.end_analysis(rooto);
+    rooto["events_total"] = nentries;
+    rooto["events_analyzed"] = nevents;
+    rooto["configuration"]["framework"]=rooti["framework"];
+    rooto["configuration"]["analysis"]=rooti["analysis"];
 
-    if ( !myEvent.is_mu && !myEvent.is_ele && !myEvent.is_phot && !myEvent.is_jet && !myEvent.is_MET)
-        cout << "\nLooped through " << i << " entries\n";
-    else
-        cout << "\nAnalyzed " << i << " entries\n";
+    cout << "\nAnalyzed " << i << " entries\n";
     cout << "histograms written to: " << ofname << endl;
     
     // write report to JSON file
-    
-    char buff[100];
-    sprintf(buff,"Max Electron PT > %i GeV)", cut_ele_PT);
-// std::string buffAsStdStr = buff;
-    
-    //rooto["root_file"]=rjfile.Data();
-    //rooto["root_tree_path"]=tdir.Data();
-    //rooto["root_tree_name"] = ttree.Data();
-    rooto["events_total"] = nentries;
-    rooto["events_analyzed"] = nevents;
-    rooto["events_analyzed_sumw"] = swevents;
-    rooto["events_yield_w"] = wevents;
-    rooto["events_yield"] = y;
-    rooto["Selection"]["Cut_0"]["Description"] = buff;
-    rooto["Selection"]["Cut_0"]["Passed_i"] = c0;
-    rooto["Selection"]["Cut_0"]["Passed_sumw"] = c0w;
-    //rooto["Selection"]["Cut_1"]["Description"] = (isElectronDST) ? "MET Cut" : "MTW Cut";
-    //rooto["Selection"]["Cut_1"]["Passed"] = c1;
     
     Json::StyledWriter writer;
     std::string outputConfig = writer.write( rooto );
