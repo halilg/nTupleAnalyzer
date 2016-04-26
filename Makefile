@@ -10,10 +10,9 @@ CROOT=`root-config --cflags`
 LOTHER= #-lboost_system
 OBJDIR=tmp
 LDFLAGS=-Wl,-rpath,$(ROOTSYS)/lib # Fix for El Capitan
-#OBJS := $(addprefix $(OBJDIR)/, jsoncpp.o json2tchain.o)
-#nTupleAnalyzer.o
 
-#all: $(OBJS)
+# Executables
+
 all: nTupleAnalyzer.exe jsoncpp_cheat.exe readcfg.exe
 
 nTupleAnalyzer.exe: nTupleAnalyzer.cc $(OBJDIR)/nTupleAnalyzer.o $(OBJDIR)/json2tchain.o $(OBJDIR)/jsoncpp.o $(OBJDIR)/analysis.o $(OBJDIR)/assign_branches.o
@@ -25,12 +24,8 @@ jsoncpp_cheat.exe: jsoncpp_cheat.cc $(OBJDIR)/jsoncpp.o
 readcfg.exe: readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o
 	$(CPP) $(CPPFLAGS) readcfg.cc $(OBJDIR)/cfgreader.o $(OBJDIR)/jsoncpp.o $(LDFLAGS) -o $@
 
-#$(OBJDIR)/%.o : %.cc
-	#$(CPP) $(CPPFLAGS) $(CROOT) -o $@ $<
 
-
-
-#$(OBJS): | $(OBJDIR)
+#Objects
 
 $(OBJDIR)/assign_branches.o: assign_branches.cc | $(OBJDIR)
 	$(CPP) -c assign_branches.cc $(CPPFLAGS) $(CROOT) -o $@
@@ -50,11 +45,8 @@ $(OBJDIR)/jsoncpp.o: jsoncpp.cc json/json-forwards.h json/json.h | $(OBJDIR)
 $(OBJDIR)/json2tchain.o: json2tchain.cc json2tchain.h | $(OBJDIR)
 	$(CPP) -c json2tchain.cc $(CPPFLAGS) $(CROOT) -o $@
 
-
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
 	
 clean:
-	$(RM) $(OBJDIR)/*.o *.exe
-
-# http://stackoverflow.com/questions/99132/how-to-prevent-directory-already-exists-error-in-a-makefile-when-using-mkdir#99174
+	$(RM) *.exe $(OBJDIR)/*.o
