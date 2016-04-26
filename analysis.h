@@ -31,6 +31,7 @@ class analysis {
         ~analysis();
         void new_event(const event&);
         void begin_analysis();
+        void end_analysis();
 };
 
 #endif
