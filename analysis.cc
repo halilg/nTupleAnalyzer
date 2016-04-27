@@ -1,9 +1,11 @@
 #include "analysis.h"
 #include <iostream>
+#include <cmath>
 #include "TMath.h"
 
 analysis::analysis(){
     debug=false;
+    //debug=true;
 }
 
 analysis::~analysis(){
@@ -19,7 +21,8 @@ void analysis::begin_analysis(const Json::Value &config, const event &myEvent){
     swevents = 0;
     fillHistos=false;
     
-    cut_ele_PT=40;
+    cut_ele_PT=20;
+    cut_ele_eta=2.5;
     
     if (myEvent.is_genw)
         h_gen_weight = new TH1D ("h_gen_weight","Event Weight (GEN); Weight (GeV); Events", 50, -400, 400);
@@ -72,7 +75,9 @@ void analysis::new_event(const event &myEvent){
         double PT2;
         for (int j=0; j< myEvent.ele_n; j++){
             PT2 = myEvent.ele_px[0]*myEvent.ele_px[0] + myEvent.ele_py[0]*myEvent.ele_py[0];
-            if (PT2 > cut_ele_PT*cut_ele_PT && myEvent.ele_id[j] == 1){
+            if (PT2 > cut_ele_PT*cut_ele_PT &&
+                abs(myEvent.ele_eta[j]) < cut_ele_eta &&
+                myEvent.ele_id[j] == 1){
                 c0OK=true;
             }
             if (fillHistos) h_eleEta->Fill(myEvent.ele_eta[j], myEvent.gen_weight);
