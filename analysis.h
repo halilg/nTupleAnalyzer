@@ -14,7 +14,7 @@ class analysis {
     Long64_t c0;
     double c0w;
     unsigned int cut_ele_PT; // GeV
-    double cut_ele_eta;
+    float cut_ele_eta;
     bool eventOK;
     bool c0OK;
     bool fillHistos;
