@@ -1,3 +1,2 @@
 #!/usr/bin/env zsh
-
-./go.zsh QCD multi nTuple
+time ./nTupleAnalyzer.exe analyze_qcd.cfg 40

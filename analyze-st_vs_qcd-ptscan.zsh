@@ -6,7 +6,7 @@ for pt in $pts; do
     ./nTupleAnalyzer.exe analyze_st.cfg $pt
     ./nTupleAnalyzer.exe analyze_qcd.cfg $pt
     
-    mv results/nTuple_ST_007E248B-54F2-E311-A601-848F69FD4586-analysis.json results/PT${pt}-nTuple_ST_007E248B-54F2-E311-A601-848F69FD4586-analysis.json
+    mv results/nTuple_ST_multi-analysis.json results/PT${pt}-nTuple_ST_multi-analysis.json
     mv results/nTuple_QCD_multi-analysis.json results/PT${pt}-nTuple_QCD_multi-analysis.json
 done
 
