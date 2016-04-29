@@ -6,7 +6,7 @@ from array import array
 gROOT.SetBatch(True)
 pt=[00,01,02,04,05,07,10,15,18,20,22,24,26,30,35,40,50,75]
 qcdfn="nTuple_QCD_multi-analysis.json"
-stfn="nTuple_ST_007E248B-54F2-E311-A601-848F69FD4586-analysis.json"
+stfn="nTuple_ST_multi-analysis.json"
 
 def readJSON(fname):
     data=file(fname).readlines()

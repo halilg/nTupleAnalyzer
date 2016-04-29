@@ -23,6 +23,8 @@ void analysis::begin_analysis(const Json::Value &config, const event &myEvent){
     
     cut_ele_PT=config["cut_ele_PT"].asUInt();
     cut_ele_eta=config["cut_ele_eta"].asFloat();
+    cut_ele_ID=config["cut_ele_ID"].asInt();
+    
     std::cout << "PT cut: " << cut_ele_PT << ", eta cut: " << cut_ele_eta << std::endl;
     
     if (myEvent.is_genw)
@@ -80,7 +82,7 @@ void analysis::new_event(const event &myEvent){
             if (PT2 > cut_ele_PT*cut_ele_PT &&
                 abs(myEvent.ele_eta[j]) < cut_ele_eta &&
                 (abs(myEvent.ele_eta[j]) < 1.44  ||  abs(myEvent.ele_eta[j]) > 1.57) &&  //exclude gap
-                myEvent.ele_id[j] == 1){
+                myEvent.ele_id[j] > cut_ele_ID){
                 c0OK=true;
             }
             if (fillHistos) h_eleEta->Fill(myEvent.ele_eta[j], myEvent.gen_weight);

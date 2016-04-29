@@ -15,6 +15,7 @@ class analysis {
     double c0w;
     unsigned int cut_ele_PT; // GeV
     float cut_ele_eta;
+    int cut_ele_ID;
     bool eventOK;
     bool c0OK;
     bool fillHistos;

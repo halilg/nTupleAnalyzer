@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include "nTupleAnalyzer.h"
 #include "event.h"
@@ -24,6 +25,12 @@ TString basename(const TString & path){
     return _path.Remove(0,_path.Last('/')+1);
 }
 
+
+std::vector<TString> split(TString text, const char & c){
+    std::vector<TString> product;
+    return product;
+}
+
 using namespace std;
 int main(int argc, char **argv){
     bool debug=true;
@@ -35,20 +42,15 @@ int main(int argc, char **argv){
     TChain * T;
     Json::Value rooti;   // will contain the root value for configuration
     Json::Value rooto;   // will contain the root value for report
-
-
+    Json::StyledWriter writer;
+    std::string outputConfig;
+    
     if (argc < 2){
         // Tell the user how to run the program
         std::cerr << "Usage: " << argv[0] << " <configuration file>" << std::endl;
         return 1;
     }
     std::string cfgfile(argv[1]);
-
-    int minpt=-1;
-    if (argc > 2){
-        minpt=std::atoi(argv[2]);
-    }    
-    if (debug) std::cout << "command line argument: " << minpt << std::endl;
     
     /////////////////////////////////////////////////////////
     // read configuration file
@@ -77,26 +79,58 @@ int main(int argc, char **argv){
         }
         if (debug) std::cout << "success.\n";
     }
-    
-    // override cfg if command line value provided
-    if (minpt != -1) rooti["analysis"]["cut_ele_PT"] = minpt;
+
+    /////////////////////////////////////////////////////////
+
+    // Read command line arguments
+    for (int i=2; i<argc; ++i){
+        TString arg(argv[i]);
+        Ssiz_t j = arg.First('=');
+        TString cfgvar=arg;
+        cfgvar.Remove(j,arg.Length()-j);
+        TString cfgval(arg);
+        cfgval.Remove(0, j+1);
+        
+        TString cfgvar1(cfgvar);
+        TString cfgvar2(cfgvar);
+        Ssiz_t k = cfgvar.First(':');
+        cfgvar1.Remove(k,arg.Length()-k);
+        cfgvar2.Remove(0, k+1);
+        
+        //cout << i << ": " << arg << ", j=" << j << ", var=" << cfgvar << ", val=" << cfgval << endl;
+        //cout << "v1=" << cfgvar1 << ", v2=" << cfgvar2 << endl;
+        cout << cfgvar1 << ":" << cfgvar2 << " : " << rooti[cfgvar1][cfgvar2] << " -> " << cfgval << endl;
+        if (rooti[cfgvar1][cfgvar2].isUInt() || rooti[cfgvar1][cfgvar2].isInt()){
+            rooti[cfgvar1][cfgvar2]=atoi(cfgval.Data());
+        }else{
+            rooti[cfgvar1][cfgvar2]=cfgval.Data();
+        }
+    }
+    //outputConfig = writer.write( rooti );
+    //cout << outputConfig << endl;
     
     long long int nevents=rooti["framework"]["maxEvents"].asInt64();
     TString rjfile(rooti["framework"]["inRootFile"].asString());
     TString tdir(rooti["framework"]["treeDir"].asString());
     TString ttree(rooti["framework"]["treeName"].asString());
-    TString ordir(rooti["framework"]["outRootDir"].asString());
-    TString ojdir(rooti["framework"]["outJSONDir"].asString());
+    TString orfile(rooti["framework"]["outRootFile"].asString());
+    TString ojfile(rooti["framework"]["outJSONFile"].asString());
     if (debug) std::cout << nevents <<   std::endl
               << rjfile << std::endl
-              << ordir << std::endl
-              << ojdir << std::endl
+              << orfile << std::endl
+              << ojfile << std::endl
               << tdir << std::endl
               << ttree << std::endl;
+    
+    //if (argc > 2){
+        //minpt=std::atoi(argv[2]);
+    //}    
+    //if (debug) std::cout << "command line argument: " << minpt << std::endl;
 
-    /////////////////////////////////////////////////////////
+    // override cfg if command line value provided
+    //if (minpt != -1) rooti["analysis"]["cut_ele_PT"] = minpt;
+
     //return 0;
-
     
     treeName=tdir+"/"+ttree;
     bool use_weights=true;        // is the input file a json file?
@@ -115,8 +149,8 @@ int main(int argc, char **argv){
     //TTree* myTree = (TTree*)T.Get(treeName);
 
     // Create the output ROOT file
-    TString ofname(ordir+TString("/h-")+basename(rjfile.Data()));
-    if (ofname.EndsWith(".json")) ofname=ofname+TString(".root");
+    TString ofname=orfile;//(orfile+TString("/h-")+basename(rjfile.Data()));
+    //if (ofname.EndsWith(".json")) ofname=ofname+TString(".root");
 
     if (debug) std::cout << "Creating: " << ofname << std::endl;
     TFile E(ofname,"recreate");
@@ -124,7 +158,6 @@ int main(int argc, char **argv){
     TTree* myTree = T; //->GetTree();
     assign_branches(myTree, myEvent);
     myAnalysis.begin_analysis(rooti["analysis"], myEvent);
-    
     Long64_t nentries = myTree->GetEntries();
     if (nentries == 0){
         cerr << "ROOT tree had no events\n";
@@ -133,7 +166,7 @@ int main(int argc, char **argv){
     cout << "Entries in ROOT tree: " << nentries << endl;
     
     // determine the number of events to analyze
-    nevents= (nevents < nentries) ? nevents : nentries; // std::min(nevents,nentries);
+    nevents= (nevents < nentries) ? nevents : nevents; // std::min(nevents,nentries);
     if (nevents == -1) nevents = nentries;
     
     cout << "Will analyze " << nevents << " events\n";     //" events\n 1000X:";    
@@ -155,18 +188,15 @@ int main(int argc, char **argv){
     cout << "histograms written to: " << ofname << endl;
     
     // write report to JSON file
-    
-    Json::StyledWriter writer;
-    std::string outputConfig = writer.write( rooto );
-    TString stemp;
-    stemp=(rjfile.Remove(0,rjfile.Last('/')+1)).Data();
-    if (stemp.EndsWith(".json")) stemp.Remove(stemp.Length()-5,stemp.Length());
-    if (stemp.EndsWith(".root")) stemp.Remove(stemp.Length()-5,stemp.Length());
-    stemp = ojdir+'/'+stemp + "-analysis.json";
-    std::ofstream out(stemp);
+    outputConfig = writer.write( rooto );
+    //stemp=(rjfile.Remove(0,rjfile.Last('/')+1)).Data();
+    //if (stemp.EndsWith(".json")) stemp.Remove(stemp.Length()-5,stemp.Length());
+    //if (stemp.EndsWith(".root")) stemp.Remove(stemp.Length()-5,stemp.Length());
+    //stemp = ojfile+'/'+stemp + "-analysis.json";
+    std::ofstream out(ojfile);
     out << outputConfig << std::endl;
     out.close();
-    std::cout << "analysis report written to: " << stemp << "\n";
+    std::cout << "analysis report written to: " << ojfile << "\n";
     delete T; 
     return 0;        
 }
