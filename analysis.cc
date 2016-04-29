@@ -21,8 +21,9 @@ void analysis::begin_analysis(const Json::Value &config, const event &myEvent){
     swevents = 0;
     fillHistos=false;
     
-    cut_ele_PT=20;
-    cut_ele_eta=2.5;
+    cut_ele_PT=config["cut_ele_PT"].asUInt();
+    cut_ele_eta=config["cut_ele_eta"].asFloat();
+    std::cout << "PT cut: " << cut_ele_PT << ", eta cut: " << cut_ele_eta << std::endl;
     
     if (myEvent.is_genw)
         h_gen_weight = new TH1D ("h_gen_weight","Event Weight (GEN); Weight (GeV); Events", 50, -400, 400);
@@ -41,6 +42,7 @@ void analysis::begin_analysis(const Json::Value &config, const event &myEvent){
         h_eleMult = new TH1I("h_eleMult","Electron Multiplicity; Multiplicity; Events", 6, 0, 5);
         h_eleID = new TH1D("h_eleID","Electron ID; Electrons", 11, 0, 10);
     }
+    
 }
 
 void analysis::new_event(const event &myEvent){

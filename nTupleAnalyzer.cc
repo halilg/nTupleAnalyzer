@@ -44,7 +44,7 @@ int main(int argc, char **argv){
     }
     std::string cfgfile(argv[1]);
 
-    int minpt=0;
+    int minpt=-1;
     if (argc > 2){
         minpt=std::atoi(argv[2]);
     }    
@@ -77,6 +77,9 @@ int main(int argc, char **argv){
         }
         if (debug) std::cout << "success.\n";
     }
+    
+    // override cfg if command line value provided
+    if (minpt != -1) rooti["analysis"]["cut_ele_PT"] = minpt;
     
     long long int nevents=rooti["framework"]["maxEvents"].asInt64();
     TString rjfile(rooti["framework"]["inRootFile"].asString());
