@@ -102,7 +102,9 @@ int main(int argc, char **argv){
         cout << cfgvar1 << ":" << cfgvar2 << " : " << rooti[cfgvar1][cfgvar2] << " -> " << cfgval << endl;
         if (rooti[cfgvar1][cfgvar2].isUInt() || rooti[cfgvar1][cfgvar2].isInt()){
             rooti[cfgvar1][cfgvar2]=atoi(cfgval.Data());
-        }else{
+        } else if (rooti[cfgvar1][cfgvar2].isDouble()){
+            rooti[cfgvar1][cfgvar2]=atof(cfgval.Data());
+        } else{
             rooti[cfgvar1][cfgvar2]=cfgval.Data();
         }
     }
