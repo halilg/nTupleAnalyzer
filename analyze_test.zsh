@@ -1,7 +1,8 @@
 #!/usr/bin/env zsh
 
 PT=41
-ELEID=0
+ELEID=-1 #no ID
+ELEID=0 #ID
 
 time ./nTupleAnalyzer.exe analyze_st.cfg analysis:cut_ele_PT=$PT \
                                          framework:maxEvents=5 \
