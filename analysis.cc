@@ -77,6 +77,7 @@ void analysis::new_event(const event &myEvent){
             PT2 = myEvent.ele_px[0]*myEvent.ele_px[0] + myEvent.ele_py[0]*myEvent.ele_py[0];
             if (PT2 > cut_ele_PT*cut_ele_PT &&
                 abs(myEvent.ele_eta[j]) < cut_ele_eta &&
+                (abs(myEvent.ele_eta[j]) < 1.44  ||  abs(myEvent.ele_eta[j]) > 1.57) &&  //exclude gap
                 myEvent.ele_id[j] == 1){
                 c0OK=true;
             }
