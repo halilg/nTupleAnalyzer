@@ -4,9 +4,10 @@ from ROOT import TGraph, TMultiGraph, TCanvas, TLegend, gROOT
 from array import array
 
 # gROOT.SetBatch(True)
-pt=[00,01,02,04,05,07,10,15,18,20,22,24,26,30,35,40,50,75]
+pt=[05,07,10,15,18,20,22,24,26,30,35,40,50]
 etas=["2.1", "2.5"]
 isols=["-1", "0"]
+# isols=["0"]
 stfn="nTuple_ST_multi-analysis.json"
 qcdfn="nTuple_QCD_multi-analysis.json"
 
@@ -31,9 +32,9 @@ for eta in etas:
         stvals=[]
         qcdvals=[]
         print eta, iso
-        print "  PT   Eff_Sig  Eff_QCD"
+        print "  PT   Eff_Sig   Eff_QCD"
         print "(GeV)"
-        print " ----------------------"
+        print " -----------------------"
         for ptv in pt:
             prefix="pt%02i-id%s-eta%s-" % (ptv, iso, eta)
             fnamest=prefix + stfn
@@ -52,7 +53,7 @@ for eta in etas:
             stvals.append(wpassedst/wsumst)
             qcdvals.append(wpassedqcd/wsumqcd)
             
-            print "  %2d   %6.4f   %7.5f" % (ptv, stvals[-1], qcdvals[-1])
+            print "  %2d   %6.4f   %8.6f" % (ptv, stvals[-1], qcdvals[-1])
         stdata[eta][iso]=stvals
         qcddata[eta][iso]=qcdvals
         
@@ -81,9 +82,16 @@ graphcorr3 =TGraph ( len(stdata["2.5"]["-1"]) , array("f", qcddata["2.5"]["-1"])
 
 
 graphcorr0.SetLineColor(4);
+graphcorr0.SetMarkerStyle(7);
+# graphcorr0.SetMarkerColor(7);
 graphcorr1.SetLineColor(4);
+graphcorr1.SetMarkerStyle(7);
+
 graphcorr2.SetLineColor(8);
+graphcorr2.SetMarkerStyle(7);
+
 graphcorr3.SetLineColor(8);
+graphcorr3.SetMarkerStyle(7);
 
 
 
@@ -95,7 +103,7 @@ graphcorr0.SetTitle("QCD Efficiency vs Signal Efficiency")
 mg0=TMultiGraph()
 mg0.SetTitle("Signal Efficiency vs. QCD Efficiency (Isolated electrons);QCD Efficiency;Signal Efficiency");
 mg1=TMultiGraph()
-mg1.SetTitle("Signal Efficiency vs. QCD Efficiency;QCD Efficiency;Signal Efficiency");
+mg1.SetTitle("Signal Efficiency vs. QCD Efficiency (No electron isolation);QCD Efficiency;Signal Efficiency");
 # mg.GetXaxis().SetTitle("QCD Efficiency")
 # mg.GetYaxis().SetTitle("Signal Efficiency")
 mg0.Add(graphcorr0)
@@ -113,10 +121,10 @@ leg1.AddEntry(graphcorr3,"|#eta| < 2.5","lp");
 
 
 
-mg0.Draw("ac")
+mg0.Draw("apc")
 leg0.Draw()
 c1.Print("corr_iso.png")
 c1.Clear()
-mg1.Draw("ac")
+mg1.Draw("apc")
 leg1.Draw()
 c1.Print("corr_noiso.png")
