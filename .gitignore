@@ -38,6 +38,8 @@ Thumbs.db
 
 # data file location
 data
+MC
+results
 
 #other
 *.json
